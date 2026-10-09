@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>QRIS Dinamis Lokal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAF9F7;--ink:#15171C;--mute:#656974;--line:#E0DFDA;--card:#fff;--red:#C8202F;--on-red:#fff;--ok:#1E7A4A;--bad:#B3261E;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13151A;--ink:#F0F0EC;--mute:#9A9EA9;--line:#2B2E36;--card:#1B1E25;--red:#E5424F;--on-red:#fff;--ok:#5CCB93;--bad:#FF8A80}}
+:root[data-theme="dark"]{--bg:#13151A;--ink:#F0F0EC;--mute:#9A9EA9;--line:#2B2E36;--card:#1B1E25;--red:#E5424F;--on-red:#fff;--ok:#5CCB93;--bad:#FF8A80}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5;-webkit-text-size-adjust:100%}
+main{max-width:480px;margin:0 auto;padding:28px 20px 40px}
+h1{font-size:30px;line-height:1.1;font-weight:800;letter-spacing:-.02em;margin:0 0 10px}
+.lead{color:var(--mute);margin:0 0 28px;font-size:15px}
+label,.lbl{display:block;font-weight:700;font-size:14px;margin:0 0 8px}
+.field{margin-bottom:22px}
+.pick{display:flex;align-items:center;gap:12px;border:1.5px dashed var(--line);border-radius:10px;padding:14px;background:var(--card);cursor:pointer}
+.pick:focus-within{outline:2px solid var(--red);outline-offset:2px}
+.pick input{position:absolute;opacity:0;width:1px;height:1px}
+.pick b{font-weight:700}
+.pick span{color:var(--mute);font-size:13px;display:block}
+textarea,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px}
+textarea{min-height:92px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;line-height:1.4;word-break:break-all}
+textarea:focus,input[type=text]:focus{outline:2px solid var(--red);outline-offset:1px;border-color:transparent}
+.amt{position:relative}
+.amt i{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-style:normal;font-weight:700;color:var(--mute)}
+.amt input{padding-left:44px;font-size:22px;font-weight:700}
+button{font:inherit;cursor:pointer}
+.go{width:100%;background:var(--red);color:var(--on-red);border:0;border-radius:10px;padding:15px;font-weight:800;font-size:16px}
+.go:focus-visible,.copy:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+.go:active{transform:translateY(1px)}
+#msg{min-height:22px;margin:12px 0 0;font-size:14px;font-weight:500}
+#msg.err{color:var(--bad)}#msg.ok{color:var(--ok)}
+#res{display:none;margin-top:26px;border-top:1.5px solid var(--line);padding-top:26px}
+.tag{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:16px;text-align:center}
+.tag img{width:100%;max-width:340px;height:auto;display:block;margin:0 auto;image-rendering:pixelated}
+.who{margin:14px 0 0;font-weight:800;font-size:17px;color:#15171C}
+.sum{margin:2px 0 0;font-size:26px;font-weight:800;color:var(--red);letter-spacing:-.01em}
+.hint{color:var(--mute);font-size:13px;margin:12px 0 22px;text-align:center}
+.row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.copy{background:transparent;color:var(--ink);border:1.5px solid var(--line);border-radius:8px;padding:6px 12px;font-weight:700;font-size:13px}
+.note{margin-top:30px;color:var(--mute);font-size:13px}
+.note p{margin:0 0 8px}
+</style>
+</head>
+<body>
+<main>
+  <h1>QRIS statis jadi dinamis</h1>
+  <p class="lead">Semua diproses di browser kamu. Tidak ada server, tidak ada API, tidak ada data yang dikirim.</p>
+
+  <div class="field">
+    <span class="lbl">QRIS statis</span>
+    <label class="pick" for="file">
+      <input id="file" type="file" accept="image/*">
+      <div><b id="pickTxt">Pilih gambar QRIS</b><span>Screenshot atau foto QRIS toko kamu</span></div>
+    </label>
+  </div>
+
+  <div class="field">
+    <label for="src">Atau tempel teks QRIS</label>
+    <textarea id="src" placeholder="00020101021126..." spellcheck="false" autocomplete="off"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="amt">Nominal</label>
+    <div class="amt"><i>Rp</i><input id="amt" type="text" inputmode="numeric" placeholder="10.000" autocomplete="off"></div>
+  </div>
+
+  <button class="go" id="go" type="button">Buat QRIS dinamis</button>
+  <p id="msg" role="status" aria-live="polite"></p>
+
+  <section id="res">
+    <div class="tag">
+      <img id="qrimg" alt="QRIS dinamis hasil">
+      <p class="who" id="who"></p>
+      <p class="sum" id="sum"></p>
+    </div>
+    <p class="hint">Tahan gambar lalu pilih simpan, atau screenshot layar ini.</p>
+    <div class="row"><span class="lbl" style="margin:0">Teks QRIS dinamis</span><button class="copy" id="cp" type="button">Salin</button></div>
+    <textarea id="out" readonly></textarea>
+  </section>
+
+  <div class="note">
+    <p>QR ini hanya mengunci nominal pada QRIS yang sama. Tidak ada ID transaksi atau konfirmasi otomatis, jadi cek notifikasi atau mutasi pembayaran sendiri.</p>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id)};
+var msg=$('msg');
+function say(t,c){msg.textContent=t||'';msg.className=c||''}
+
+// CRC16-CCITT (poly 0x1021, init 0xFFFF) sesuai standar QRIS/EMV
+function crc16(s){var c=0xFFFF,i,j;for(i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(j=0;j<8;j++){c=(c&0x8000)?((c<<1)^0x1021):(c<<1);c&=0xFFFF}}return c.toString(16).toUpperCase().padStart(4,'0')}
+
+// Baca TLV: 2 digit tag + 2 digit panjang + isi
+function parse(s){var o=[],i=0;while(i<s.length){var t=s.substr(i,2),l=parseInt(s.substr(i+2,2),10);if(!/^\d\d$/.test(t)||isNaN(l)||i+4+l>s.length)throw new Error('Format QRIS tidak valid. Pastikan teks lengkap dan tidak terpotong.');o.push([t,s.substr(i+4,l)]);i+=4+l}return o}
+function tlv(t,v){return t+String(v.length).padStart(2,'0')+v}
+
+function build(raw,amount){
+  var q=raw.replace(/[\r\n\t]+/g,'').trim();
+  if(q.indexOf('000201')!==0)throw new Error('Teks ini bukan QRIS (harus diawali 000201).');
+  var tags=parse(q),last=tags[tags.length-1];
+  if(last[0]!=='63')throw new Error('QRIS tidak punya checksum di akhir. Teks mungkin terpotong.');
+  var tags2=tags.filter(function(t){return t[0]!=='63'&&t[0]!=='54'});
+  tags2.forEach(function(t){if(t[0]==='01')t[1]='12'}); // 11 = statis, 12 = dinamis
+  var at=-1;tags2.forEach(function(t,i){if(t[0]==='53')at=i});
+  if(at<0){tags2.forEach(function(t,i){if(at<0&&t[0]==='58')at=i-1})}
+  if(at<0)at=tags2.length-1;
+  tags2.splice(at+1,0,['54',amount]); // 54 = nominal transaksi
+  var body=tags2.map(function(t){return tlv(t[0],t[1])}).join('')+'6304';
+  var get=function(k){var f=tags.filter(function(t){return t[0]===k})[0];return f?f[1]:''};
+  return {text:body+crc16(body),name:get('59'),city:get('60')};
+}
+
+function draw(text){
+  var qr=qrcode(0,'M');qr.addData(text,'Byte');qr.make();
+  var n=qr.getModuleCount(),m=4,s=Math.max(4,Math.floor(680/(n+2*m))),size=(n+2*m)*s;
+  var c=document.createElement('canvas');c.width=c.height=size;
+  var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,size,size);x.fillStyle='#000';
+  for(var r=0;r<n;r++)for(var k=0;k<n;k++)if(qr.isDark(r,k))x.fillRect((k+m)*s,(r+m)*s,s,s);
+  return c.toDataURL('image/png');
+}
+
+function readImage(file){
+  return new Promise(function(res,rej){
+    if(typeof jsQR!=='function')return rej(new Error('Pembaca QR gagal dimuat. Tempel teks QRIS secara manual.'));
+    var fr=new FileReader();
+    fr.onerror=function(){rej(new Error('File tidak bisa dibaca.'))};
+    fr.onload=function(){
+      var img=new Image();
+      img.onerror=function(){rej(new Error('Gambar tidak bisa dibuka.'))};
+      img.onload=function(){
+        var sizes=[2000,1200,800,500];
+        for(var i=0;i<sizes.length;i++){
+          var sc=Math.min(1,sizes[i]/Math.max(img.width,img.height));
+          var w=Math.round(img.width*sc),h=Math.round(img.height*sc);
+          var c=document.createElement('canvas');c.width=w;c.height=h;
+          var x=c.getContext('2d',{willReadFrequently:true});
+          x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
+          var d=x.getImageData(0,0,w,h),r=jsQR(d.data,w,h,{inversionAttempts:'attemptBoth'});
+          if(r&&r.data)return res(r.data);
+        }
+        rej(new Error('QR tidak terbaca. Coba gambar yang lebih tajam, atau tempel teks QRIS.'));
+      };
+      img.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+$('file').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  $('pickTxt').textContent=f.name;say('Membaca QR…');
+  readImage(f).then(function(t){$('src').value=t;say('QRIS terbaca. Isi nominal lalu buat QRIS dinamis.','ok')})
+  .catch(function(err){say(err.message,'err')});
+});
+
+$('amt').addEventListener('input',function(e){
+  var d=e.target.value.replace(/\D/g,'').slice(0,13);
+  e.target.value=d?d.replace(/\B(?=(\d{3})+(?!\d))/g,'.'):'';
+});
+
+$('go').addEventListener('click',function(){
+  $('res').style.display='none';
+  var src=$('src').value.trim(),amt=$('amt').value.replace(/\D/g,'').replace(/^0+/,'');
+  if(!src)return say('Pilih gambar QRIS atau tempel teksnya dulu.','err');
+  if(!amt)return say('Isi nominal lebih dari 0.','err');
+  try{
+    var r=build(src,amt),img=draw(r.text);
+    $('qrimg').src=img;$('out').value=r.text;
+    $('who').textContent=[r.name,r.city].filter(Boolean).join(', ')||'QRIS dinamis';
+    $('sum').textContent='Rp '+amt.replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+    $('res').style.display='block';
+    say('Selesai. Cek nama merchant sebelum dipakai.','ok');
+    $('res').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(err){say(err.message,'err')}
+});
+
+$('cp').addEventListener('click',function(){
+  var o=$('out'),b=$('cp'),t=o.value;
+  function done(ok){b.textContent=ok?'Tersalin':'Tahan teks untuk menyalin';setTimeout(function(){b.textContent='Salin'},1800)}
+  try{navigator.clipboard.writeText(t).then(function(){done(true)},fb)}catch(e){fb()}
+  function fb(){o.focus();o.select();var ok=false;try{ok=document.execCommand('copy')}catch(e){}done(ok)}
+});
+})();
+</script>
+</body>
+</html>
